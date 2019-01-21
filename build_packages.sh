@@ -12,19 +12,34 @@ mkdir -p /build/fr24feed
 cd /build/fr24feed
 DEB_ARCH=$(dpkg --print-architecture)
 case $DEB_ARCH in
+  i386)
+    FR24_URL="$(curl -s https://repo-feed.flightradar24.com/fr24feed_versions.json | jq -r '.platform.linux_x86_tgz.url.software')"
+    ;;
   amd64)
     FR24_URL="$(curl -s https://repo-feed.flightradar24.com/fr24feed_versions.json | jq -r '.platform.linux_x86_64_tgz.url.software')"
     ;;
   arm64)
     FR24_URL="$(curl -s https://repo-feed.flightradar24.com/fr24feed_versions.json | jq -r '.platform.linux_arm_tgz.url.software')"
     ;;
+  armhf)
+    FR24_URL="$(curl -s https://repo-feed.flightradar24.com/fr24feed_versions.json | jq -r '.platform.linux_arm_tgz.url.software')"
+    ;;
   *)
     echo "Unknown architecture: $DEB_ARCH"
     exit 1
 esac
-wget "$FR24_URL"
-tar zxvf fr24feed_*.tgz
-cp fr24feed_*/fr24feed .
+if [ -n "$FR24_URL" ]; then
+  wget "$FR24_URL"
+  tar zxvf fr24feed_*.tgz
+  cp fr24feed_*/fr24feed .
+else
+  cat <<"EOM" >fr24feed
+#!/bin/sh
+
+echo "fr24feed: Unsupported architecture, exiting"
+exit 0
+EOM
+fi
 chmod 0755 fr24feed
 
 cd /build
