@@ -1,0 +1,76 @@
+#!/bin/sh
+
+set -e
+
+echo "Configuring lighttpd..."
+service lighttpd start
+
+echo "Configuring piaware..."
+if [ -n "$FA_USER" ]; then
+    piaware-config flightaware-user "$FA_USER"
+fi
+if [ -n "$FA_PASSWORD" ]; then
+    piaware-config flightaware-password "$FA_PASSWORD"
+fi
+if [ -n "$FA_FEEDER_ID" ]; then
+    piaware-config feeder-id "$FA_FEEDER_ID"
+fi
+service piaware start
+
+if [ -n "$FR24KEY" ]; then
+    echo "Configuring fr24feed..."
+    mkdir -p /var/log/fr24feed /run/fr24
+    touch /etc/fr24feed.ini
+    chmod 0600 /etc/fr24feed.ini
+    chown fr24 /var/log/fr24feed /run/fr24 /etc/fr24feed.ini
+    cat >/etc/fr24feed.ini <<EOM
+receiver="avr-tcp"
+fr24key="${FR24KEY}"
+host="127.0.0.1:30002"
+bs="no"
+raw="no"
+logmode="2"
+logpath="/var/log/fr24feed"
+mlat="yes"
+mlat-without-gps="yes"
+EOM
+    /sbin/start-stop-daemon --start --oknodo --background --user fr24 \
+        --pidfile /run/fr24/fr24feed.pid --make-pidfile \
+        --chuid fr24 --exec /usr/local/bin/fr24feed --
+fi
+
+echo "Configuring feed-adsbexchange..."
+mkdir -p /run/adsbexchange
+chown adsbexchange /run/adsbexchange
+/sbin/start-stop-daemon --start --oknodo --background --user adsbexchange \
+    --pidfile /run/adsbexchange/feed-adsbexchange.pid --make-pidfile \
+    --chuid adsbexchange --exec /usr/local/bin/feed-adsbexchange --
+
+while [ ! -e /var/cache/piaware/feeder_id ]; do
+    echo "Waiting for piaware to set feeder_id..."
+    sleep 5
+done
+
+echo "Configuring dump1090-fa..."
+mkdir -p /run/dump1090-fa
+
+. /etc/default/dump1090-fa
+if [ -e /var/cache/piaware/location.env ]; then
+  . /var/cache/piaware/location.env
+fi
+
+/sbin/start-stop-daemon --start --oknodo --background --user root \
+    --pidfile /run/dump1090-fa/dump1090-fa.pid --make-pidfile \
+    --chuid root --exec /usr/bin/dump1090-fa -- \
+    $RECEIVER_OPTIONS $DECODER_OPTIONS $NET_OPTIONS $JSON_OPTIONS $PIAWARE_DUMP1090_LOCATION_OPTIONS \
+    --write-json /run/dump1090-fa --quiet
+
+sleep 5
+
+while true; do
+    echo
+    date
+    echo "Receiver location: ${PIAWARE_LAT} ${PIAWARE_LON}"
+    piaware-status
+    sleep 300
+done
