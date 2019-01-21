@@ -39,7 +39,7 @@ EOM
         --chuid fr24 --exec /usr/local/bin/fr24feed --
 fi
 
-if [ -z "$ENABLE_ADSBEXCHANGE" ];
+if [ -z "$ENABLE_ADSBEXCHANGE" ]; then
     ENABLE_ADSBEXCHANGE=yes
 fi
 if [ "$ENABLE_ADSBEXCHANGE" = "yes" ]; then
