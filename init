@@ -39,12 +39,17 @@ EOM
         --chuid fr24 --exec /usr/local/bin/fr24feed --
 fi
 
-echo "Configuring feed-adsbexchange..."
-mkdir -p /run/adsbexchange
-chown adsbexchange /run/adsbexchange
-/sbin/start-stop-daemon --start --oknodo --background --user adsbexchange \
-    --pidfile /run/adsbexchange/feed-adsbexchange.pid --make-pidfile \
-    --chuid adsbexchange --exec /usr/local/bin/feed-adsbexchange --
+if [ -z "$ENABLE_ADSBEXCHANGE" ];
+    ENABLE_ADSBEXCHANGE=yes
+fi
+if [ "$ENABLE_ADSBEXCHANGE" = "yes" ]; then
+    echo "Configuring feed-adsbexchange..."
+    mkdir -p /run/adsbexchange
+    chown adsbexchange /run/adsbexchange
+    /sbin/start-stop-daemon --start --oknodo --background --user adsbexchange \
+        --pidfile /run/adsbexchange/feed-adsbexchange.pid --make-pidfile \
+        --chuid adsbexchange --exec /usr/local/bin/feed-adsbexchange --
+fi
 
 while [ ! -e /var/cache/piaware/feeder_id ]; do
     echo "Waiting for piaware to set feeder_id..."
@@ -70,7 +75,9 @@ sleep 5
 while true; do
     echo
     date
-    echo "Receiver location: ${PIAWARE_LAT} ${PIAWARE_LON}"
+    if [ -n "${PIAWARE_LAT}${PIAWARE_LON}" ]; then
+        echo "Receiver location: ${PIAWARE_LAT} ${PIAWARE_LON}"
+    fi
     piaware-status
     sleep 300
 done
