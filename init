@@ -6,6 +6,8 @@ echo "Configuring lighttpd..."
 service lighttpd start
 
 echo "Configuring piaware..."
+mkdir -p /run/piaware
+chown piaware:piaware /run/piaware
 if [ -n "$FA_USER" ]; then
     piaware-config flightaware-user "$FA_USER"
 fi
@@ -19,10 +21,10 @@ service piaware start
 
 if [ -n "$FR24KEY" ]; then
     echo "Configuring fr24feed..."
-    mkdir -p /var/log/fr24feed /run/fr24
+    mkdir -p /var/log/fr24feed /run/fr24feed
     touch /etc/fr24feed.ini
     chmod 0600 /etc/fr24feed.ini
-    chown fr24 /var/log/fr24feed /run/fr24 /etc/fr24feed.ini
+    chown fr24feed:fr24feed /var/log/fr24feed /run/fr24feed /etc/fr24feed.ini
     cat >/etc/fr24feed.ini <<EOM
 receiver="avr-tcp"
 fr24key="${FR24KEY}"
@@ -34,9 +36,9 @@ logpath="/var/log/fr24feed"
 mlat="yes"
 mlat-without-gps="yes"
 EOM
-    /sbin/start-stop-daemon --start --oknodo --background --user fr24 \
-        --pidfile /run/fr24/fr24feed.pid --make-pidfile \
-        --chuid fr24 --exec /usr/local/bin/fr24feed --
+    /sbin/start-stop-daemon --start --oknodo --background --user fr24feed \
+        --pidfile /run/fr24feed/fr24feed.pid --make-pidfile \
+        --chuid fr24feed --exec /usr/local/bin/fr24feed --
 fi
 
 if [ -z "$ENABLE_ADSBEXCHANGE" ]; then
@@ -45,7 +47,7 @@ fi
 if [ "$ENABLE_ADSBEXCHANGE" = "yes" ]; then
     echo "Configuring feed-adsbexchange..."
     mkdir -p /run/adsbexchange
-    chown adsbexchange /run/adsbexchange
+    chown adsbexchange:adsbexchange /run/adsbexchange
     /sbin/start-stop-daemon --start --oknodo --background --user adsbexchange \
         --pidfile /run/adsbexchange/feed-adsbexchange.pid --make-pidfile \
         --chuid adsbexchange --exec /usr/local/bin/feed-adsbexchange --
@@ -58,15 +60,17 @@ done
 
 echo "Configuring dump1090-fa..."
 mkdir -p /run/dump1090-fa
+chown dump1090-fa:dump1090-fa /run/dump1090-fa
+chown -R dump1090-fa:dump1090-fa /dev/bus/usb || true
 
 . /etc/default/dump1090-fa
 if [ -e /var/cache/piaware/location.env ]; then
   . /var/cache/piaware/location.env
 fi
 
-/sbin/start-stop-daemon --start --oknodo --background --user root \
+/sbin/start-stop-daemon --start --oknodo --background --user dump1090-fa \
     --pidfile /run/dump1090-fa/dump1090-fa.pid --make-pidfile \
-    --chuid root --exec /usr/bin/dump1090-fa -- \
+    --chuid dump1090-fa --exec /usr/bin/dump1090-fa -- \
     $RECEIVER_OPTIONS $DECODER_OPTIONS $NET_OPTIONS $JSON_OPTIONS $PIAWARE_DUMP1090_LOCATION_OPTIONS \
     --write-json /run/dump1090-fa --quiet
 

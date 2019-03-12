@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -e
+set -x
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
@@ -44,12 +45,10 @@ chmod 0755 fr24feed
 
 cd /build
 git clone --depth=1 https://github.com/flightaware/piaware_builder
-git clone --depth=1 https://github.com/flightaware/dump1090
 
 cd /build/piaware_builder
 ./sensible-build.sh bionic
 cd /build/piaware_builder/package-bionic
 debuild -b -us -uc
-
-cd /build/dump1090
+cd /build/piaware_builder/package-bionic/dump1090
 debuild -b -us -uc
