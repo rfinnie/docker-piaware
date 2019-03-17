@@ -2,7 +2,7 @@
 
 [https://github.com/rfinnie/docker-piaware](https://github.com/rfinnie/docker-piaware)
 
-This image runs [PiAware](https://flightaware.com/adsb/piaware/) + FlightAware's dump1090-fa software.  It also has support for Flightradar24's [fr24feed](https://www.flightradar24.com/share-your-data), and feeding to [ADS-B Exchange](https://www.adsbexchange.com/how-to-feed/).
+This image runs [PiAware](https://flightaware.com/adsb/piaware/) + FlightAware's dump1090-fa software.
 
 This image should build on any architecture, and is currently being built for arm64 and amd64.  Raspbian images may be supported once buster is released (for "recent" Docker).
 
@@ -21,8 +21,6 @@ USBDEV="$(lsusb | perl -ne '/^Bus (\d+) Device (\d+): .* RTL2832U DVB-T$/ && pri
 export FA_USER="Your FlightAware username"
 export FA_PASSWORD="Your FlightAware password"
 export FA_FEEDER_ID="Your FlightAware feeder ID"
-export FR24KEY="Your Flightradar24 key" # Optional
-export ENABLE_ADSBEXCHANGE=yes # Optional, default yes
 
 docker run \
   --rm \
@@ -31,11 +29,7 @@ docker run \
   -e FA_USER \
   -e FA_PASSWORD \
   -e FA_FEEDER_ID \
-  -e FR24KEY \
-  -e ENABLE_ADSBEXCHANGE \
   -p 8080:8080 \
-  -p 30002:30002 \
-  -p 8754:8754 \
   rfinnie/piaware
 ```
 
@@ -43,4 +37,4 @@ Your FlightAware feeder ID can be found by logging into FlightAware and going to
 
 If this is a new site, don't set FA_FEEDER_ID.  The first time you run the container, FlightAware will generate and display a new feeder ID in the container output.  Note this UUID and use it for future invocations (otherwise a new feeder ID will be generated every time).  Also be sure to go the FlightAware site configuration page and set latitude/longitude of the site, and other information.
 
-Port 8080 is the local SkyView information page (visual representation of planes in the sky).  Port 8754 is, if enabled, Flightradar24's status page.  Other ports are available, such as 30002 for the raw feed.
+Port 8080 is the local SkyView information page (visual representation of planes in the sky).  Other ports are available, such as 30002 for the raw feed.

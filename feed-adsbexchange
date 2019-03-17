@@ -1,6 +1,0 @@
-#!/bin/sh
-
-while true; do
-  socat -u TCP:127.0.0.1:30005 TCP:feed.adsbexchange.com:30005
-  sleep 30
-done

@@ -19,40 +19,6 @@ if [ -n "$FA_FEEDER_ID" ]; then
 fi
 service piaware start
 
-if [ -n "$FR24KEY" ]; then
-    echo "Configuring fr24feed..."
-    mkdir -p /var/log/fr24feed /run/fr24feed
-    touch /etc/fr24feed.ini
-    chmod 0600 /etc/fr24feed.ini
-    chown fr24feed:fr24feed /var/log/fr24feed /run/fr24feed /etc/fr24feed.ini
-    cat >/etc/fr24feed.ini <<EOM
-receiver="avr-tcp"
-fr24key="${FR24KEY}"
-host="127.0.0.1:30002"
-bs="no"
-raw="no"
-logmode="2"
-logpath="/var/log/fr24feed"
-mlat="yes"
-mlat-without-gps="yes"
-EOM
-    /sbin/start-stop-daemon --start --oknodo --background --user fr24feed \
-        --pidfile /run/fr24feed/fr24feed.pid --make-pidfile \
-        --chuid fr24feed --exec /usr/local/bin/fr24feed --
-fi
-
-if [ -z "$ENABLE_ADSBEXCHANGE" ]; then
-    ENABLE_ADSBEXCHANGE=yes
-fi
-if [ "$ENABLE_ADSBEXCHANGE" = "yes" ]; then
-    echo "Configuring feed-adsbexchange..."
-    mkdir -p /run/adsbexchange
-    chown adsbexchange:adsbexchange /run/adsbexchange
-    /sbin/start-stop-daemon --start --oknodo --background --user adsbexchange \
-        --pidfile /run/adsbexchange/feed-adsbexchange.pid --make-pidfile \
-        --chuid adsbexchange --exec /usr/local/bin/feed-adsbexchange --
-fi
-
 while [ ! -e /var/cache/piaware/feeder_id ]; do
     echo "Waiting for piaware to set feeder_id..."
     sleep 5
