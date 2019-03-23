@@ -7,7 +7,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 apt-get install -y --no-install-recommends adduser lighttpd perl-modules
 
-(dpkg -i /tmp/dump1090-fa_*.deb /tmp/piaware_*.deb || apt-get -y --no-install-recommends -f install)
+apt-get -y --no-install-recommends -f install /tmp/dump1090-fa_*.deb /tmp/piaware_*.deb
 apt-get clean
 
 lighty-enable-mod piaware
